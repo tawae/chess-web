@@ -1,4 +1,4 @@
-// src/firebase.js
+
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth"; // Thêm GoogleAuthProvider
 import { getFirestore } from "firebase/firestore"; // Thêm Firestore
