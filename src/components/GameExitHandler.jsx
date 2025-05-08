@@ -1,264 +1,128 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+// GameExitHandler.jsx
+import React, { useEffect, useCallback } from "react";
+import { useNavigate, useLocation, useBeforeUnload } from "react-router-dom";
 
-/**
- * Component to handle game exit confirmations
- * @param {Object} props
- * @param {boolean} props.isGameActive - Whether a game is currently active
- * @param {string} props.gameMode - Game mode: 'local', 'ai', or 'online'
- * @param {Function} props.onExitConfirm - Function to call when exit is confirmed
- * @param {string} props.playerColor - In online mode, the player's color ('white'/'black')
- * @param {Function} props.notifyOpponent - Function to notify opponent about forfeit in online mode
- */
-const GameExitHandler = ({ 
-  isGameActive, 
-  gameMode = 'local',
-  onExitConfirm,
-  playerColor,
-  notifyOpponent
-}) => {
+export default function GameExitHandler({
+  isGameActive,
+  message = "Bạn sẽ bị xử thua nếu rời khỏi ván đấu. Rời đi?",
+  onExitConfirm = () => {},
+  notifyOpponent = () => {},
+  gameEnded = false // Thêm prop để kiểm tra xem game đã kết thúc chưa
+}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const exitConfirmed = useRef(false);
-  const linkClickHandlerRef = useRef(null); // Store handler function reference for cleanup
+  
+  // Chặn reload / đóng tab với useBeforeUnload hook
+  useBeforeUnload(
+    useCallback(
+      (event) => {
+        if (isGameActive && !gameEnded) {
+          event.preventDefault();
+          return message;
+        }
+      },
+      [isGameActive, gameEnded, message]
+    )
+  );
 
-  // Handler for browser's beforeunload event (closing tab, refreshing)
-  const handleBeforeUnload = useCallback((e) => {
-    if (!isGameActive) return;
+  // Xử lý nút Back và navigation trong ứng dụng
+  useEffect(() => {
+    if (!isGameActive || gameEnded) return;
     
-    // Don't perform side effects during the confirmation dialog
-    // Just show the standard browser confirmation dialog
-    e.preventDefault();
-    e.returnValue = 'Bạn đang trong trận đấu. Nếu rời đi bạn sẽ bị xử thua. Bạn có chắc muốn thoát?';
-    return e.returnValue; // For older browsers
-  }, [isGameActive]);
+    // Biến cờ để theo dõi xem người dùng đã xác nhận thoát chưa
+    let hasConfirmedExit = false;
+    
+    // Biến để lưu trạng thái của vị trí hiện tại
+    const currentPath = location.pathname;
+    
+    // Hàm để xử lý khi người dùng cố gắng rời trang
+    const handleNavigation = (e) => {
+      // Nếu đã xác nhận thoát, không làm gì cả
+      if (hasConfirmedExit) return;
+      
+      // Ngăn chặn điều hướng mặc định
+      e.preventDefault();
+      
+      // Hiển thị hộp thoại xác nhận
+      const confirmed = window.confirm(message);
+      
+      if (confirmed) {
+        // Đánh dấu đã xác nhận thoát
+        hasConfirmedExit = true;
+        
+        // Thực hiện các hành động khi thoát
+        onExitConfirm();
+        notifyOpponent();
+        
+        // Gỡ bỏ trình xử lý sự kiện
+        window.removeEventListener('popstate', handleNavigation);
+        
+        // Để React Router tiếp tục điều hướng, chúng ta sẽ thực hiện lại hành động
+        if (e.type === 'popstate') {
+          // Nếu là nút Back, tiếp tục quá trình điều hướng
+          window.history.back();
+        } else {
+          // Đối với các phương thức điều hướng khác, sẽ sử dụng navigate
+          // e.state.target có thể chứa URL đích
+          if (e.state && e.state.target) {
+            navigate(e.state.target);
+          }
+        }
+      } else {
+        // Nếu người dùng không muốn rời đi, đảm bảo lịch sử không thay đổi
+        window.history.pushState(null, "", currentPath);
+      }
+    };
 
-  // Handle actual unload event - only runs if the user confirmed leaving
+    // Lưu lại phương thức gốc
+    const originalPushState = window.history.pushState;
+    
+    // Ghi đè phương thức pushState để bắt các điều hướng trong ứng dụng
+    window.history.pushState = function(state, title, url) {
+      if (url !== currentPath && isGameActive && !hasConfirmedExit) {
+        // Lưu URL đích vào state để sử dụng sau
+        const customEvent = new PopStateEvent('pushState', {
+          state: { ...state, target: url }
+        });
+        
+        // Gọi trình xử lý với sự kiện tùy chỉnh
+        handleNavigation(customEvent);
+        
+        // Nếu không xác nhận, không thực hiện điều hướng
+        if (!hasConfirmedExit) {
+          return;
+        }
+      }
+      
+      // Nếu không phải điều hướng ra khỏi trang trò chơi hoặc đã xác nhận, thực hiện bình thường
+      return originalPushState.apply(this, arguments);
+    };
+    
+    // Đưa URL hiện tại vào lịch sử để có thể bắt sự kiện back
+    window.history.pushState(null, "", currentPath);
+    
+    // Đăng ký bắt sự kiện popstate (nút Back)
+    window.addEventListener('popstate', handleNavigation);
+    
+    // Dọn dẹp khi component bị unmount
+    return () => {
+      window.history.pushState = originalPushState;
+      window.removeEventListener('popstate', handleNavigation);
+    };
+  }, [isGameActive, message, navigate, location, onExitConfirm, notifyOpponent]);
+
+  // Gửi thông báo thoát khi người chơi thật sự rời tab
   useEffect(() => {
     const handleUnload = () => {
-      if (!isGameActive || exitConfirmed.current) return;
-      
-      // Only now perform the side effects since the user definitely is leaving
-      if (gameMode === 'online' && notifyOpponent) {
-        notifyOpponent({
-          type: 'forfeit',
-          player: playerColor
-        });
-      }
-      
-      if (onExitConfirm) {
+      if (isGameActive && !gameEnded) {
         onExitConfirm();
-      }
-      
-      exitConfirmed.current = true;
-    };
-    
-    if (isGameActive) {
-      window.addEventListener('unload', handleUnload);
-    }
-    
-    return () => {
-      window.removeEventListener('unload', handleUnload);
-    };
-  }, [isGameActive, gameMode, notifyOpponent, playerColor, onExitConfirm]);
-
-  // Set up the beforeunload handler for browser tab close/refresh
-  useEffect(() => {
-    if (isGameActive) {
-      window.addEventListener('beforeunload', handleBeforeUnload);
-    }
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [isGameActive, handleBeforeUnload]);
-
-  // Helper function to get the appropriate exit message based on game mode
-  const getExitMessage = useCallback(() => {
-    if (gameMode === 'ai') {
-      return 'Bạn đang trong ván đấu với máy. Nếu rời đi bạn sẽ bị xử thua. Bạn có chắc chắn muốn thoát?';
-    } else if (gameMode === 'online') {
-      return 'Nếu rời đi, đối thủ của bạn sẽ được thông báo rằng bạn đã bỏ cuộc và bạn sẽ bị xử thua. Bạn có chắc chắn muốn thoát?';
-    }
-    return 'Bạn đang trong ván đấu. Nếu rời đi bạn sẽ bị xử thua. Bạn có chắc chắn muốn thoát?';
-  }, [gameMode]);
-  
-  // Handle exit confirmation process
-  const handleExit = useCallback(() => {
-    exitConfirmed.current = true;
-    
-    // Handle online game opponent notification
-    if (gameMode === 'online' && notifyOpponent) {
-      notifyOpponent({ 
-        type: 'forfeit', 
-        player: playerColor 
-      });
-    }
-    
-    // Call the exit confirmation callback if provided
-    if (onExitConfirm) {
-      onExitConfirm();
-    }
-  }, [gameMode, notifyOpponent, playerColor, onExitConfirm]);
-  
-  // Custom navigation handling for in-app navigation
-  useEffect(() => {
-    // Store the original navigate function
-    const originalNavigate = navigate;
-    
-    // Create a wrapper for navigate that includes confirmation
-    const navigateWithConfirmation = (to, options) => {
-      if (!isGameActive) {
-        originalNavigate(to, options);
-        return;
-      }
-
-      // Skip confirmation if navigating to the same page
-      if (typeof to === 'string' && to === location.pathname) {
-        originalNavigate(to, options);
-        return;
-      }
-
-      const confirmExit = window.confirm(getExitMessage());
-      
-      if (confirmExit) {
-        handleExit();
-        originalNavigate(to, options);
-      }
-      // User canceled - do nothing, stay on the page
-    };
-
-    // Make the safe navigation function available globally
-    // but don't reassign the navigate constant
-    if (isGameActive) {
-      window.__gameExitNavigate = navigateWithConfirmation;
-    } else {
-      window.__gameExitNavigate = originalNavigate;
-    }
-    
-    return () => {
-      // Clean up the global function
-      window.__gameExitNavigate = originalNavigate;
-    };
-  }, [isGameActive, navigate, location.pathname, getExitMessage, handleExit]);
-
-  // Listen for popstate events (browser back/forward buttons)
-  useEffect(() => {
-    const handlePopState = (e) => {
-      if (!isGameActive) return;
-      
-      // For all game modes, prevent immediate navigation and show confirmation
-      e.preventDefault();
-      
-      // Show appropriate confirmation dialog based on game mode
-      const confirmExit = window.confirm(getExitMessage());
-      
-      if (confirmExit) {
-        handleExit();
-        // Allow navigation to continue
-      } else {
-        // If user cancels, prevent navigation by pushing the current path back to history
-        window.history.pushState(null, '', location.pathname);
+        notifyOpponent();
       }
     };
 
-    // Define the link click handler and store its reference for cleanup
-    const handleLinkClick = (e) => {
-      if (!isGameActive) return;
-      
-      // Check if it's a navigation link (like title, home, etc.)
-      const clickedElement = e.target;
-      const linkElement = clickedElement.tagName === 'A' ? 
-                         clickedElement : 
-                         clickedElement.closest('a');
-                         
-      if (!linkElement) return; // Not a link or child of link
-      
-      const href = linkElement.getAttribute('href');
-      
-      // Skip if it's not a navigation link or points to the current page
-      if (!href || href === '#' || href === location.pathname) return;
-      
-      // Prevent default navigation for all links when game is active
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Show confirmation dialog
-      const confirmExit = window.confirm(getExitMessage());
-      
-      if (confirmExit) {
-        handleExit();
-        // Navigate after confirmation
-        setTimeout(() => {
-          window.location.href = href;
-        }, 100);
-      }
-    };
-    
-    // Store the handler reference for cleanup
-    linkClickHandlerRef.current = handleLinkClick;
+    window.addEventListener("unload", handleUnload);
+    return () => window.removeEventListener("unload", handleUnload);
+  }, [isGameActive, gameEnded, onExitConfirm, notifyOpponent]);
 
-    if (isGameActive) {
-      // Listen for back button
-      window.addEventListener('popstate', handlePopState);
-      
-      // Additionally, try to capture browser back via history API
-      const pushStateOriginal = window.history.pushState;
-      window.history.pushState = function() {
-        // Call original
-        pushStateOriginal.apply(window.history, arguments);
-        // Dispatch custom event that we can listen for
-        window.dispatchEvent(new Event('pushstate'));
-      };
-      
-      // Listen for our custom pushstate event
-      const handlePushState = () => {
-        if (!isGameActive) return;
-        // This will catch programmatic history changes
-        // We use the same condition as in handlePopState
-        const confirmExit = window.confirm(getExitMessage());
-        if (!confirmExit) {
-          // Restore history if user cancels
-          window.history.pushState(null, '', location.pathname);
-        } else {
-          handleExit();
-        }
-      };
-      
-      window.addEventListener('pushstate', handlePushState);
-      
-      // Use the handler from the ref for click events
-      document.addEventListener('click', linkClickHandlerRef.current, true);
-
-      // Return cleanup function
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-        window.removeEventListener('pushstate', handlePushState);
-        window.history.pushState = pushStateOriginal;
-        if (linkClickHandlerRef.current) {
-          document.removeEventListener('click', linkClickHandlerRef.current, true);
-        }
-      };
-    }
-    
-    return () => {};
-  }, [isGameActive, location.pathname, navigate, getExitMessage, handleExit]);
-
-  return null; // This is a behavior-only component, no UI
-};
-
-// Export a utility function for other components to use
-export const safeNavigate = (to, options) => {
-  if (window.__gameExitNavigate) {
-    window.__gameExitNavigate(to, options);
-  } else if (typeof window.navigate === 'function') {
-    window.navigate(to, options);
-  } else {
-    // Fallback to simple location change if navigate isn't available
-    if (typeof to === 'string') {
-      window.location.href = to;
-    }
-  }
-};
-
-export default GameExitHandler;
+  return null;
+}

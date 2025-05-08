@@ -6,6 +6,7 @@ import Timer from './components/Timer';
 import GameControls from './components/GameControls';
 import MoveHistory from './components/MoveHistory';
 import "./App.css";
+import GameExitHandler from './components/GameExitHandler';
 
 const ChessBoard = ({ mode }) => {
   const location = useLocation();
@@ -33,6 +34,12 @@ const ChessBoard = ({ mode }) => {
   const [gameOverMessage, setGameOverMessage] = useState('');
   const lastMove = useRef(null);
   const initialSetupComplete = useRef(false);
+  const [isGameActive, setIsGameActive] = useState(true); // Track if the game is active
+
+  const handleExitConfirm = () => {
+    console.log("Exiting game...");
+    navigate('/'); // Redirect to home or desired route
+  };
 
   // Keep the gameRef updated with the latest game state
   useEffect(() => {
@@ -356,6 +363,12 @@ const ChessBoard = ({ mode }) => {
 
   return (
     <div className="chess-container">
+      <GameExitHandler 
+        isGameActive={isGameActive} // Pass the active game state
+        gameMode="ai"
+        onExitConfirm={handleExitConfirm} // Pass the exit handler
+        gameEnded={showGameOverModal} // Sử dụng showGameOverModal để xác định khi nào game đã kết thúc
+      />
       <div className="game-info">
         {mode === 'ai' && (
           <div>
@@ -368,7 +381,7 @@ const ChessBoard = ({ mode }) => {
       {showGameOverModal && (
         <div className="game-over-overlay">
           <div className="game-over-content">
-            <h2>Game Kết Thúc</h2>
+            <h2>Game Over</h2>
             <p>{gameOverMessage}</p>
             <div className="game-over-buttons">
               <button className="control-button new-game" onClick={handleNewGame}>
