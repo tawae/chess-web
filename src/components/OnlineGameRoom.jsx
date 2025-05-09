@@ -256,8 +256,12 @@ const OnlineGameRoom = () => {
                       !roomData?.winner;
 
   // Handle opponent notification when player leaves
-  const notifyOpponentForfeit = useCallback(({ type, player }) => {
+  const notifyOpponentForfeit = useCallback((data = {}) => {
+    console.log("notifyOpponentForfeit called with data:", data);
+    
     if (roomData && roomId && user && roomData.status === 'playing') {
+      console.log("Updating game result in Firebase due to forfeit. Player color:", playerColor);
+      
       const gameResult = {
         status: 'completed',
         winner: playerColor === 'white' ? 'black' : 'white',
@@ -266,11 +270,18 @@ const OnlineGameRoom = () => {
       
       update(ref(db, `rooms/${roomId}`), gameResult)
         .then(() => {
-          console.log("Game ended due to player forfeit");
+          console.log("Game ended due to player forfeit. Winner:", gameResult.winner);
         })
         .catch((error) => {
           console.error("Failed to update game result:", error);
         });
+    } else {
+      console.log("Cannot update forfeit - conditions not met:", {
+        hasRoomData: !!roomData,
+        roomId: roomId,
+        hasUser: !!user,
+        roomStatus: roomData?.status
+      });
     }
   }, [roomId, roomData, playerColor, user]);
 
@@ -313,11 +324,29 @@ const OnlineGameRoom = () => {
     <div className="chess-container online-game">
       <GameExitHandler 
         isGameActive={isGameActive}
-        gameMode="online"
-        playerColor={playerColor}
+        message="Bạn sẽ bị xử thua nếu rời khỏi ván đấu. Rời đi?"
+        onExitConfirm={() => console.log("Người chơi xác nhận thoát")}
         notifyOpponent={notifyOpponentForfeit}
+        gameEnded={roomData?.status === 'completed' || gameRef.current?.isGameOver() || !!roomData?.winner}
       />
       
+      {/* {showGameOverModal && (
+        <div className="game-over-overlay">
+          <div className="game-over-content">
+            <h2>Game Over</h2>
+            <p>{gameOverMessage}</p>
+            <div className="game-over-buttons">
+              <button className="control-button new-game" onClick={restartGame}>
+                Ván mới
+              </button>
+              <button className="control-button exit" onClick={handleExitToHome}>
+                Thoát
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+       */}
       <div className="game-info">
         <div className="room-code">Phòng: {roomId}</div>
         <div className="players-info">

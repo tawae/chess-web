@@ -116,7 +116,11 @@ export default function GameExitHandler({
     const handleUnload = () => {
       if (isGameActive && !gameEnded) {
         onExitConfirm();
-        notifyOpponent();
+        // Gọi notifyOpponent với thông tin cần thiết về người chơi thoát
+        notifyOpponent({
+          type: 'forfeit',
+          player: 'current'
+        });
       }
     };
 
