@@ -1,8 +1,16 @@
 #root {
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+}
+
+.app-header.align-items-center {
+  background: #aec6cf;
+  width: 100%;
+  padding: 1rem 3rem;
+  display: flex;
+  justify-content: space-between;
 }
 
 .chess-container {
@@ -155,7 +163,8 @@
   padding: 20px;
 }
 
-.create-room, .join-room {
+.create-room,
+.join-room {
   margin: 20px 0;
   padding: 20px;
   border: 1px solid #ccc;
@@ -249,7 +258,8 @@
 .cancel-button {
   margin-top: 20px;
   padding: 10px 20px;
-  background-color: #e63946; /* Màu đỏ */
+  background-color: #e63946;
+  /* Màu đỏ */
   color: white;
   border: none;
   border-radius: 5px;
@@ -274,7 +284,7 @@
 }
 
 .moves-list .move-item {
-  border-bottom: none; 
+  border-bottom: none;
   padding: 3px 5px;
 }
 
@@ -602,20 +612,27 @@
   background-color: #3488b6;
 }
 
-.brand:hover {
-  background-color: #3488b6;
+.theme-button {
+  background: #9548ff;
+}
+
+.theme-button:hover {
+  background: #773acc;
 }
 
 .social-logo {
   width: 20px;
   height: 20px;
-  padding: auto;;
+  padding: auto;
+  ;
 }
+
 .social-text {
   font-size: medium;
   color: black;
   text-align: left;
 }
+
 .game-modes {
   align-items: center;
   display: flex;
@@ -648,7 +665,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-size-adjust: 200;
 }
 
@@ -687,7 +704,7 @@
 
 .auth-form form {
   margin-bottom: 1.5rem;
-  box-sizing:content-box;
+  box-sizing: content-box;
 }
 
 .form-group {
@@ -725,7 +742,7 @@
   font-weight: 500;
   margin: 10px;
   transition: background 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .form-group input:focus {
@@ -806,7 +823,7 @@
   font-weight: 500;
   margin: 10px;
   transition: background 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   align-items: center;
 }
 
@@ -900,4 +917,45 @@
 
 .back-to-login:hover {
   background-color: #e5e7eb;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+  margin-right: 0;
+  transition: margin-right 0.3s ease;
+}
+
+.app-header {
+  background: #aec6cf;
+  width: 100%;
+  padding: 1rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #000;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 1rem;
+  }
+
+  .main-content {
+    padding: 0.5rem;
+  }
 }
