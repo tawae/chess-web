@@ -4,8 +4,8 @@
     right: -300px;
     width: 300px;
     height: 100%;
-    background-color: #2d2d2d;
-    color: #fff;
+    background-color: #fefae0;
+    color: #000;
     transition: right 0.3s ease;
     z-index: 1000;
     display: flex;
@@ -67,7 +67,7 @@
 }
 
 .theme-button {
-    background: #9548ff;
+    background: #283618;
     color: #fff;
     border: none;
     padding: 0.5rem 1rem;
@@ -81,7 +81,7 @@
 }
 
 .auth-button {
-    background-color: #669bbc;
+    background-color: #606c38;
     color: #fff;
     border: none;
     padding: 0.5rem 1rem;
@@ -98,7 +98,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    align-items: flex-start;
+    align-items: stretch;
+    width: 100%;
 }
 
 @media (max-width: 768px) {

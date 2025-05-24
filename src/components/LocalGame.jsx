@@ -8,7 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import GameExitHandler from './GameExitHandler';
 import { safeNavigate } from '../utils/navigation';
 
-const LocalGame = () => {
+const settingImages = {
+  light: 'src/assets/icons8-setting-50.png',
+  dark: 'src/assets/icons8-white-setting-50.png'
+}
+
+const LocalGame = ({ theme }) => {
   const navigate = useNavigate();
   const [game, setGame] = useState(new Chess());
   const [selectedSquare, setSelectedSquare] = useState(null);
@@ -26,7 +31,7 @@ const LocalGame = () => {
   const [currentMoveTime, setCurrentMoveTime] = useState(timerSettings.perMoveTime);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [gameOverMessage, setGameOverMessage] = useState('');
-  
+
   // Determine if the game is active (for exit confirmation)
   const isGameActive = !showGameOverModal && game && !game.isGameOver();
 
@@ -119,12 +124,12 @@ const LocalGame = () => {
     if (!isPaused && !showGameOverModal) {
       const currentTurn = game.turn();
       const winner = currentTurn === 'w' ? 'Đen' : 'Trắng';
-      
+
       // Mark the game as over without trying to set an invalid FEN
       const gameCopy = new Chess(game.fen());
       // Instead of trying to load an invalid FEN, we'll just set a flag
       setGame(gameCopy);
-      
+
       // Show game over modal
       setGameOverMessage(`Hết thời gian! ${winner} thắng!`);
       setShowGameOverModal(true);
@@ -156,20 +161,21 @@ const LocalGame = () => {
   return (
     <div className="chess-container">
       {/* Add the GameExitHandler component */}
-      <GameExitHandler 
+      <GameExitHandler
         isGameActive={isGameActive}
         gameMode="local"
         onExitConfirm={handleExitConfirm}
       />
-      
-      <button 
+
+      <button
         className="settings-button"
         onClick={() => {
           setShowSettings(!showSettings);
           setIsPaused(!isPaused);
         }}
       >
-        ⚙️
+        {/* ⚙️ */}
+        <img src={settingImages[theme]}></img>
       </button>
 
       {isPaused && (
@@ -177,7 +183,7 @@ const LocalGame = () => {
           <div className="pause-content">
             <h2>Cài đặt</h2>
             <TimerSettings onSettingsChange={handleTimerSettingsChange} />
-            <button 
+            <button
               className="control-button resume"
               onClick={() => {
                 setShowSettings(false);
@@ -210,7 +216,7 @@ const LocalGame = () => {
       <div className="game-info">
         <div>Lượt đi: {game.turn() === 'w' ? 'Trắng' : 'Đen'}</div>
       </div>
-      
+
       {timerSettings.isEnabled && (
         <div className="timers">
           <div className="white-timer">
@@ -238,7 +244,7 @@ const LocalGame = () => {
 
       <div className="board-container">
         <div className="board-wrapper">
-          <Chessboard 
+          <Chessboard
             position={game.fen()}
             onSquareClick={handleSquareClick}
             customSquareStyles={customSquareStyles}
@@ -247,7 +253,7 @@ const LocalGame = () => {
             boardWidth={480}
           />
         </div>
-        
+
         <MoveHistory moves={moveHistory} />
       </div>
     </div>

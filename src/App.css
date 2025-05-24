@@ -6,7 +6,7 @@
 }
 
 .app-header.align-items-center {
-  background: #aec6cf;
+  background: #b58863;
   width: 100%;
   padding: 1rem 3rem;
   display: flex;
@@ -18,15 +18,16 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  padding: 20px;
+  padding: 0 20px;
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
 }
 
 .game-info {
-  margin-bottom: 20px;
   text-align: center;
+  font-weight: bold;
+  font-size: x-large;
   width: 100%;
 }
 
@@ -44,7 +45,7 @@
   height: 480px;
   overflow-y: auto;
   flex-shrink: 0;
-  background-color: #2d2d2d;
+  background-color: #f0d9b5;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
@@ -52,7 +53,7 @@
   margin-top: 0;
   padding-bottom: 8px;
   border-bottom: 1px solid #444;
-  color: #eee;
+  color: #444;
 }
 
 .moves-list {
@@ -67,15 +68,19 @@
   align-items: center;
   flex-wrap: wrap;
   position: relative;
-  background-color: #3a3a3a;
+  background-color: #283618;
 }
 
 .move-item:nth-child(even) {
-  background-color: #333333;
+  background-color: #fefae0;
 }
 
 .move-item:hover {
   background-color: #494949;
+}
+
+.move-item:nth-child(even):hover .move-notation {
+  color: #ffffff;
 }
 
 .move-item.white .piece-icon {
@@ -107,6 +112,10 @@
   color: #ddd;
 }
 
+.move-notation:nth-child(even) {
+  color: #444;
+}
+
 .capture-symbol {
   color: #ff6b6b;
   font-weight: bold;
@@ -126,7 +135,7 @@
 }
 
 .no-moves {
-  color: #888;
+  color: #000000;
   text-align: center;
   margin-top: 20px;
   font-style: italic;
@@ -147,8 +156,9 @@
 }
 
 .app-title {
-  font-size: 2em;
-  color: #000000;
+  font-size: 3em;
+  font-weight: bolder;
+  color: #283618 !important;
 }
 
 .board-wrapper {
@@ -225,6 +235,11 @@
   flex-direction: column;
 }
 
+.auth-buttons button {
+  background-color: #dda15e;
+  color: #000000;
+}
+
 .loading-message {
   text-align: center;
   padding: 40px;
@@ -289,16 +304,16 @@
 }
 
 .timer-settings {
-  margin: 20px 0;
+  margin: 0 14px;
   padding: 15px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  background-color: #2d2d2d;
+  background-color: #9548ff;
   color: #fff;
 }
 
 .timer-toggle {
-  margin-bottom: 15px;
+  font-weight: bold;
 }
 
 .timer-options {
@@ -319,7 +334,14 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #fff;
+  font-weight: bold;
+}
+
+.total-time-setting,
+.total-time-setting input,
+.per-move-time-setting,
+.per-move-time-setting input {
+  font-weight: bold;
 }
 
 .timer input[type="number"] {
@@ -332,11 +354,19 @@
 }
 
 .timer {
-  margin: 10px 0;
+  margin: 10px 60px;
   padding: 10px;
   background-color: #2d2d2d;
   border-radius: 4px;
   color: #fff;
+}
+
+.white-timer .timer {
+  background-color: #ffffff;
+}
+
+.white-timer .timer .timer-display {
+  color: #000000;
 }
 
 .timer-display {
@@ -361,7 +391,6 @@
 }
 
 .game-controls {
-  margin: 20px 0;
   text-align: center;
   position: relative;
   z-index: 2;
@@ -378,13 +407,14 @@
 }
 
 .control-button.pause {
-  background-color: #ff9800;
+  background-color: #669bbc;
   color: white;
 }
 
 .control-button.resume {
-  background-color: #4CAF50;
-  color: white;
+  margin-top: 20px;
+  background-color: #bc6c25;
+  color: #f0d9b5;
 }
 
 .control-button.resign {
@@ -424,11 +454,16 @@
 }
 
 .pause-content {
-  background-color: #2d2d2d;
+  background-color: #f0d9b5;
   padding: 20px;
   border-radius: 8px;
-  color: white;
+  color: #283618;
   z-index: 2;
+}
+
+.pause-content h2 {
+  margin-bottom: 30px;
+  font-weight: bolder;
 }
 
 .settings-button {
@@ -463,19 +498,26 @@
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #a02525;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ai-setup h2 {
+  font-weight: bold;
+}
+
+.ai-setup h3 {
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .color-selection,
 .difficulty-selection,
 .timer-settings-section {
-  margin: 20px 0;
+  max-width: 400px;
+  margin: 20px auto;
   padding: 15px;
-  border: 1px solid #6d1d1d;
   border-radius: 4px;
-  background-color: rgb(122, 25, 25);
 }
 
 .color-buttons button,
@@ -491,7 +533,6 @@
 
 .color-buttons button.selected,
 .difficulty-buttons button.selected {
-  background-color: #4CAF50;
   color: white;
   border-color: #4CAF50;
 }
@@ -499,25 +540,27 @@
 .start-button {
   display: block;
   width: 100%;
+  max-width: 400px;
   padding: 15px;
-  margin-top: 20px;
-  background-color: #2196F3;
+  margin: 0 auto;
+  background-color: #9548ff;
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .start-button:hover {
-  background-color: #1976D2;
+  background-color: #fefae0;
+  color: #283618;
 }
 
 .timers {
   display: flex;
   justify-content: space-between;
-  margin: 20px 0;
   gap: 20px;
 }
 
@@ -525,11 +568,11 @@
 .black-timer {
   flex: 1;
   padding: 3px;
-  background-color: rgb(255, 98, 98);
+  background-color: #b58863;
   border-radius: 10px;
   text-align: center;
-  border: 1px solid #000000;
   font-weight: bold;
+  width: 300px;
 }
 
 /* Game Over Modal Styles */
@@ -638,28 +681,31 @@
   display: flex;
   position: relative;
   flex-direction: column;
-  max-width: 320px;
-  margin: 80px auto;
+  max-width: 600px;
+  margin: 0 auto;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  background: #c1121f;
   border-radius: 8px;
 }
 
+.game-modes h2 {
+  font-weight: bold;
+}
+
 .mode-button {
-  background-color: #fdf0d5;
   color: rgb(0, 0, 0);
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 300px;
+  max-width: 400px;
   align-items: center;
-  gap: 12px;
+  gap: 5px;
   padding: 10px 16px;
-  font-size: 16px;
-  font-weight: 500;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 20px;
+  font-weight: bold;
   border: 10;
   margin: 10px;
   border-radius: 8px;
@@ -667,6 +713,12 @@
   transition: background 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-size-adjust: 200;
+}
+
+.local-img,
+.pve-img,
+.pvp-img {
+  width: 40px;
 }
 
 /* Auth Container styles */
@@ -691,7 +743,7 @@
   border: none;
   background: none;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.3s;
   color: #000000;
@@ -758,7 +810,7 @@
   background-color: #3b82f6;
   color: white;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s;
 }
@@ -959,3 +1011,84 @@
     padding: 0.5rem;
   }
 }
+
+.game-modes,
+.ai-setup {
+  background: #dda15e;
+}
+
+.mode-button,
+.color-selection,
+.difficulty-selection,
+.timer-settings-section,
+.timer-options {
+  background-color: #fefae0;
+  color: #283618;
+}
+
+.game-modes h2,
+.ai-setup h2 {
+  color: #606c38;
+}
+
+.color-buttons button.selected,
+.difficulty-buttons button.selected,
+.timer-settings,
+.start-button {
+  background-color: #bc6c25;
+}
+
+.timer-settings,
+.start-button {
+  color: #f0d9b5;
+}
+
+/* [data-bs-theme="dark"] .game-modes {
+  background-color: #a02525;
+}
+
+[data-bs-theme="dark"] .game-modes h2 {
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] .mode-button {
+  background-color: rgb(122, 25, 25);
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] .ai-setup {
+  background-color: #a02525;
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] .color-selection,
+[data-bs-theme="dark"] .difficulty-selection,
+[data-bs-theme="dark"] .timer-settings-section {
+  background-color: rgb(122, 25, 25);
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] .control-button.pause {
+  background-color: #755c80;
+  color: white;
+}
+
+[data-bs-theme="dark"] .color-buttons button.selected,
+[data-bs-theme="dark"] .difficulty-buttons button.selected,
+[data-bs-theme="dark"] .timer-settings,
+[data-bs-theme="dark"] .start-button {
+  background-color: #1976D2;
+}
+
+[data-bs-theme="dark"] .start-button:hover {
+  background-color: #9548ff;
+}
+
+[data-bs-theme="dark"] .move-history {
+  background-color: #775c80;
+}
+
+[data-bs-theme="dark"] .auth-buttons button {
+  background-color: #ffffff;
+  color: #000000;
+} */

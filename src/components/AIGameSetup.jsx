@@ -27,7 +27,7 @@ const AIGameSetup = () => {
   return (
     <div className="ai-setup">
       <h2>Thiết lập trận đấu với AI</h2>
-      
+
       <div className="color-selection">
         <h3>Chọn quân cờ</h3>
         <div className="color-buttons">
@@ -47,7 +47,7 @@ const AIGameSetup = () => {
       </div>
 
       <div className="difficulty-selection">
-        <h3>Chọn độ khó</h3>
+        <h3 class="setup-title">Chọn độ khó</h3>
         <div className="difficulty-buttons">
           <button
             className={difficulty === 'easy' ? 'selected' : ''}
@@ -71,7 +71,7 @@ const AIGameSetup = () => {
       </div>
 
       <div className="timer-settings-section">
-        <h3>Cài đặt đồng hồ</h3>
+        <h3 class="setup-title">Cài đặt đồng hồ</h3>
         <TimerSettings onSettingsChange={setTimerSettings} />
       </div>
 

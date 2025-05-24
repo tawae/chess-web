@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import './Sidebar.css';
+import { auth } from "./firebase";
 
 const Sidebar = ({ theme, toggleTheme, isSidebarOpen, setIsSidebarOpen }) => {
     const { user } = useAuth();
@@ -29,7 +30,6 @@ const Sidebar = ({ theme, toggleTheme, isSidebarOpen, setIsSidebarOpen }) => {
                             onClick={() => {
                                 auth.signOut();
                                 navigate('/');
-                                handleToggleSidebar();
                             }}
                         >
                             Đăng xuất

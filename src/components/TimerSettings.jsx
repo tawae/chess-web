@@ -31,7 +31,7 @@ const TimerSettings = ({ onSettingsChange }) => {
               setIsEnabled(e.target.checked);
             }}
           />
-          Bật đồng hồ đếm ngược
+          &nbsp;&nbsp;&nbsp;&nbsp;Bật đồng hồ đếm ngược
         </label>
       </div>
 
@@ -65,7 +65,7 @@ const TimerSettings = ({ onSettingsChange }) => {
           {timerType === 'total' ? (
             <div className="total-time-setting">
               <label>
-                Tổng thời gian (phút):
+                Tổng thời gian (phút):&nbsp;&nbsp;&nbsp;&nbsp;
                 <input
                   type="number"
                   min="1"
@@ -80,7 +80,7 @@ const TimerSettings = ({ onSettingsChange }) => {
           ) : (
             <div className="per-move-time-setting">
               <label>
-                Thời gian mỗi nước (giây):
+                Thời gian mỗi nước (giây):&nbsp;
                 <input
                   type="number"
                   min="5"

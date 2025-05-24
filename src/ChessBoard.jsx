@@ -2,13 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useLocation, useNavigate } from 'react-router-dom';
+import TimerSettings from './components/TimerSettings';
 import Timer from './components/Timer';
 import GameControls from './components/GameControls';
 import MoveHistory from './components/MoveHistory';
 import "./App.css";
 import GameExitHandler from './components/GameExitHandler';
 
-const ChessBoard = ({ mode }) => {
+const settingImages = {
+  light: 'src/assets/icons8-setting-50.png',
+  dark: 'src/assets/icons8-white-setting-50.png'
+}
+
+const ChessBoard = ({ mode, theme }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [game, setGame] = useState(new Chess());
@@ -17,6 +23,7 @@ const ChessBoard = ({ mode }) => {
   const [moveHistory, setMoveHistory] = useState([]);
   const [engine, setEngine] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const gameSettings = mode === 'ai' ? location?.state : {};
   const playerColor = gameSettings?.playerColor || 'white';
   const difficulty = gameSettings?.difficulty || 'normal';
@@ -39,6 +46,19 @@ const ChessBoard = ({ mode }) => {
   const handleExitConfirm = () => {
     console.log("Exiting game...");
     navigate('/'); // Redirect to home or desired route
+  };
+
+  // Handle timer settings changes
+  const handleTimerSettingsChange = (newSettings) => {
+    setTimerSettings(newSettings);
+    if (newSettings.isEnabled) {
+      if (newSettings.timerType === 'total') {
+        setWhiteTime(parseFloat(newSettings.totalTime) * 60);
+        setBlackTime(parseFloat(newSettings.totalTime) * 60);
+      } else {
+        setCurrentMoveTime(parseFloat(newSettings.perMoveTime));
+      }
+    }
   };
 
   // Keep the gameRef updated with the latest game state
@@ -78,7 +98,7 @@ const ChessBoard = ({ mode }) => {
     if (mode === 'ai' && location?.state?.timerSettings) {
       const settings = location.state.timerSettings;
       setTimerSettings(settings);
-      
+
       if (settings.isEnabled) {
         if (settings.timerType === 'total') {
           // Convert minutes to seconds for the timer
@@ -102,16 +122,16 @@ const ChessBoard = ({ mode }) => {
       try {
         console.log("Initializing Stockfish worker...");
         const stockfish = new Worker('/stockfish.js');
-        
+
         stockfish.onmessage = (e) => {
           if (!e || !e.data) {
             console.error("Received empty message from stockfish worker");
             return;
           }
-          
+
           const message = e.data;
           console.log("Stockfish message:", message);
-          
+
           if (message === 'uciok') {
             console.log("Stockfish UCI OK");
             // Set skill level based on difficulty
@@ -120,7 +140,7 @@ const ChessBoard = ({ mode }) => {
             if (difficulty === 'hard') skillLevel = 20;
             stockfish.postMessage(`setoption name Skill Level value ${skillLevel}`);
             stockfish.postMessage('isready');
-          } 
+          }
           else if (message === 'readyok') {
             console.log("Stockfish Ready OK");
             // Only do initial setup once
@@ -136,30 +156,30 @@ const ChessBoard = ({ mode }) => {
           else if (typeof message === 'string' && message.startsWith('bestmove')) {
             // Process AI move
             const moveStr = message.split(' ')[1];
-            
+
             if (!moveStr || moveStr === '(none)') {
               console.warn("AI returned invalid move (none)");
               makeRandomMove();
               isAIMoving.current = false;
               return;
             }
-            
+
             console.log("AI suggests move:", moveStr);
             // Log the turn to verify FEN sync
             console.debug("Current turn (before AI move):", gameRef.current.turn());
-            
+
             try {
               // Apply the move
               const from = moveStr.substring(0, 2);
               const to = moveStr.substring(2, 4);
               const promotion = moveStr.length > 4 ? moveStr.substring(4, 5) : undefined;
 
-              lastMove.current = { from, to }; 
-              
+              lastMove.current = { from, to };
+
               // Use the CURRENT game state VIA THE REF
-              const gameCopy = new Chess(gameRef.current.fen()); 
+              const gameCopy = new Chess(gameRef.current.fen());
               console.debug("Applying move to FEN:", gameRef.current.fen());
-              
+
               // Try to directly apply the move using chess.js
               try {
                 const moveResult = gameCopy.move({
@@ -167,12 +187,12 @@ const ChessBoard = ({ mode }) => {
                   to: to,
                   promotion: promotion || 'q'
                 });
-                
+
                 if (moveResult) {
                   console.log("Successfully applied AI move:", moveResult);
                   setGame(gameCopy);
                   setMoveHistory(prev => [...prev, moveResult]);
-                  
+
                   // Reset per-move timer if needed
                   if (timerSettings.isEnabled && timerSettings.timerType === 'perMove') {
                     setCurrentMoveTime(timerSettings.perMoveTime);
@@ -189,7 +209,7 @@ const ChessBoard = ({ mode }) => {
               console.error("Error processing AI move:", error);
               makeRandomMove();
             } finally {
-              isAIMoving.current = false; 
+              isAIMoving.current = false;
             }
           }
           else if (message === 'Worker initialized') {
@@ -223,7 +243,7 @@ const ChessBoard = ({ mode }) => {
       console.log("AI move request skipped: Engine not ready or AI already moving.");
       return;
     }
-    
+
     try {
       const fen = currentGame.fen();
       console.log("Requesting AI move for position:", fen);
@@ -246,7 +266,7 @@ const ChessBoard = ({ mode }) => {
     if (!isPaused && !showGameOverModal) {
       const currentTurn = game.turn();
       const winner = currentTurn === 'w' ? 'Đen' : 'Trắng';
-      
+
       setGameOverMessage(`Hết thời gian! ${winner} thắng!`);
       setShowGameOverModal(true);
     }
@@ -286,7 +306,7 @@ const ChessBoard = ({ mode }) => {
       console.log("Square click ignored: Paused, game over, modal shown, or AI moving.");
       return;
     }
-    
+
     const currentTurn = game.turn();
     const playerSide = playerColor === 'white' ? 'w' : 'b';
 
@@ -319,7 +339,7 @@ const ChessBoard = ({ mode }) => {
         if (move) {
           console.log("Player made move:", move);
           lastMove.current = { from: selectedSquare, to: square };
-          
+
           setGame(gameCopy);
           setMoveHistory(prev => [...prev, move]);
           setSelectedSquare(null);
@@ -363,12 +383,59 @@ const ChessBoard = ({ mode }) => {
 
   return (
     <div className="chess-container">
-      <GameExitHandler 
+      <GameExitHandler
         isGameActive={isGameActive} // Pass the active game state
         gameMode="ai"
         onExitConfirm={handleExitConfirm} // Pass the exit handler
         gameEnded={showGameOverModal} // Sử dụng showGameOverModal để xác định khi nào game đã kết thúc
       />
+
+      <button
+        className="settings-button"
+        onClick={() => {
+          setShowSettings(!showSettings);
+          setIsPaused(!isPaused);
+        }}
+      >
+        {/* ⚙️ */}
+        <img src={settingImages[theme]}></img>
+      </button>
+
+      {isPaused && (
+        <div className="pause-overlay">
+          <div className="pause-content">
+            <h2>Cài đặt</h2>
+            <TimerSettings onSettingsChange={handleTimerSettingsChange} />
+            <button
+              className="control-button resume"
+              onClick={() => {
+                setShowSettings(false);
+                setIsPaused(false);
+              }}
+            >
+              Tiếp tục
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showGameOverModal && (
+        <div className="game-over-overlay">
+          <div className="game-over-content">
+            <h2>Game Over</h2>
+            <p>{gameOverMessage}</p>
+            <div className="game-over-buttons">
+              <button className="control-button new-game" onClick={restartGame}>
+                Ván mới
+              </button>
+              <button className="control-button exit" onClick={handleExitToHome}>
+                Thoát
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="game-info">
         {mode === 'ai' && (
           <div>
@@ -420,13 +487,13 @@ const ChessBoard = ({ mode }) => {
         </div>
       )}
 
-      <GameControls
+      {/* <GameControls
         isPaused={isPaused}
         onPause={handlePause}
         onResume={handleResume}
         onResign={handleResign}
         onNewGame={handleNewGame}
-      />
+      /> */}
 
       <div className="board-container">
         <div className="board-wrapper">
@@ -441,9 +508,9 @@ const ChessBoard = ({ mode }) => {
           />
         </div>
 
-        <MoveHistory 
-          moves={moveHistory} 
-          boardOrientation={playerColor} 
+        <MoveHistory
+          moves={moveHistory}
+          boardOrientation={playerColor}
         />
       </div>
     </div>

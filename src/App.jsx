@@ -18,28 +18,43 @@ import "./App.css";
 import { useAuth } from "./hooks/useAuth";
 
 // Component cho trang chủ
-function GameModes() {
+function GameModes({ theme }) {
   const navigate = useNavigate();
-
+  const images = {
+    light: {
+      local: 'src/assets/icons8-cross-swords-66.png',
+      pve: 'src/assets/icons8-robot-50.png',
+      pvp: 'src/assets/icons8-globe-50.png',
+    },
+    dark: {
+      local: 'src/assets/icons8-cross-swords-66.png',
+      pve: 'src/assets/icons8-robot-50.png',
+      pvp: 'src/assets/icons8-globe-50.png',
+    },
+  };
   return (
     <div className="game-modes">
+
       <h2>Chọn chế độ chơi</h2>
       <button
         className="mode-button"
         onClick={() => navigate('/local')}
       >
+        <img src={images[theme].local} class="local-img"></img>
         Chơi 2 người 1 máy
       </button>
       <button
         className="mode-button"
         onClick={() => navigate('/ai')}
       >
+        <img src={images[theme].pve} class="pve-img"></img>
         Chơi với máy
       </button>
       <button
         className="mode-button"
         onClick={() => navigate('/online')}
       >
+        <img src={images[theme].pvp} class="pvp-img"></img>
         Chơi PvP Online
       </button>
     </div>
@@ -72,7 +87,7 @@ function App() {
           <Link to="/">
             <div className="brand align-items-center d-flex">
               <img className="app-icon" src="/chess.png" alt="Logo" />
-              <h1 className="app-title text-body">Cờ Vua</h1>
+              <h1 className="app-title text-body">Cờ vua</h1>
             </div>
           </Link>
           <button
@@ -86,10 +101,10 @@ function App() {
         <div className="main-content">
           <div className="game-section">
             <Routes>
-              <Route path="/" element={<GameModes />} />
-              <Route path="/local" element={<LocalGame />} />
+              <Route path="/" element={<GameModes theme={theme} />} />
+              <Route path="/local" element={<LocalGame theme={theme} />} />
               <Route path="/ai" element={<AIGameSetup />} />
-              <Route path="/play-ai" element={<ChessBoard mode="ai" />} />
+              <Route path="/play-ai" element={<ChessBoard mode="ai" theme={theme} />} />
               <Route
                 path="/online"
                 element={
