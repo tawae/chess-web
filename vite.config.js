@@ -5,15 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    // Gỡ bỏ hoặc comment out các header này nếu không cần COEP nữa
-    // headers: {
-    //   'Cross-Origin-Embedder-Policy': 'require-corp',
-    //   'Cross-Origin-Opener-Policy': 'same-origin',
-    // },
+    port: 3000,
   },
-  server: {
-    port: 3000
-  },  
   optimizeDeps: {
     exclude: ['stockfish'],
   },

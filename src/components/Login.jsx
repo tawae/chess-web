@@ -54,7 +54,6 @@ function Login() {
     }
   };
   
-  // Email authentication handlers
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -131,7 +130,6 @@ function Login() {
       {error && <div className="auth-error">{error}</div>}
       
       {isLoginView ? (
-        // LOGIN FORM
         <div className="auth-form">
           <form onSubmit={handleEmailLogin}>
             <div className="form-group align-items-center">
@@ -197,7 +195,6 @@ function Login() {
           </div>
         </div>
       ) : (
-        // REGISTRATION FORM
         <div className="auth-form">
           <form onSubmit={handleRegister}>
             <div className="form-group align-items-center d-flex">

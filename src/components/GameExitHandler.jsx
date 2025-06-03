@@ -1,13 +1,12 @@
-// GameExitHandler.jsx
 import React, { useEffect, useCallback } from "react";
 import { useNavigate, useLocation, useBeforeUnload } from "react-router-dom";
 
 export default function GameExitHandler({
   isGameActive,
-  message = "Bạn sẽ bị xử thua nếu rời khỏi ván đấu. Rời đi?",
+  message = "Bạn sẽ bị xử thua nếu rời khỏi ván đấu.",
   onExitConfirm = () => {},
   notifyOpponent = () => {},
-  gameEnded = false // Thêm prop để kiểm tra xem game đã kết thúc chưa
+  gameEnded = false // kiểm tra xem game đã kết thúc chưa
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,7 +28,7 @@ export default function GameExitHandler({
   useEffect(() => {
     if (!isGameActive || gameEnded) return;
     
-    // Biến cờ để theo dõi xem người dùng đã xác nhận thoát chưa
+    // Biến để xem người dùng đã xác nhận thoát chưa
     let hasConfirmedExit = false;
     
     // Biến để lưu trạng thái của vị trí hiện tại

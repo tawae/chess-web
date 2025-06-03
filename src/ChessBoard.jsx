@@ -2,19 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useLocation, useNavigate } from 'react-router-dom';
-import TimerSettings from './components/TimerSettings';
 import Timer from './components/Timer';
-import GameControls from './components/GameControls';
 import MoveHistory from './components/MoveHistory';
 import "./App.css";
 import GameExitHandler from './components/GameExitHandler';
+import PauseHandler from './components/PauseHandler';
 
 const settingImages = {
-  light: 'src/assets/icons8-setting-50.png',
-  dark: 'src/assets/icons8-white-setting-50.png'
+  light: 'src/assets/pause-dark.png',
+  dark: 'src/assets/pause-light.png'
 }
 
-const ChessBoard = ({ mode, theme }) => {
+const AIGame = ({ mode, theme }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [game, setGame] = useState(new Chess());
@@ -41,24 +40,13 @@ const ChessBoard = ({ mode, theme }) => {
   const [gameOverMessage, setGameOverMessage] = useState('');
   const lastMove = useRef(null);
   const initialSetupComplete = useRef(false);
-  const [isGameActive, setIsGameActive] = useState(true); // Track if the game is active
+  const [isGameActive, setIsGameActive] = useState(true);
+  const [isResuming, setIsResuming] = useState(false);
+  
 
   const handleExitConfirm = () => {
     console.log("Exiting game...");
-    navigate('/'); // Redirect to home or desired route
-  };
-
-  // Handle timer settings changes
-  const handleTimerSettingsChange = (newSettings) => {
-    setTimerSettings(newSettings);
-    if (newSettings.isEnabled) {
-      if (newSettings.timerType === 'total') {
-        setWhiteTime(parseFloat(newSettings.totalTime) * 60);
-        setBlackTime(parseFloat(newSettings.totalTime) * 60);
-      } else {
-        setCurrentMoveTime(parseFloat(newSettings.perMoveTime));
-      }
-    }
+    navigate('/');
   };
 
   // Keep the gameRef updated with the latest game state
@@ -66,7 +54,6 @@ const ChessBoard = ({ mode, theme }) => {
     gameRef.current = game;
   }, [game]);
 
-  // Move makeRandomMove ABOVE the useEffect that references it
   const makeRandomMove = () => {
     try {
       const gameCopy = new Chess(gameRef.current.fen());
@@ -193,7 +180,6 @@ const ChessBoard = ({ mode, theme }) => {
                   setGame(gameCopy);
                   setMoveHistory(prev => [...prev, moveResult]);
 
-                  // Reset per-move timer if needed
                   if (timerSettings.isEnabled && timerSettings.timerType === 'perMove') {
                     setCurrentMoveTime(timerSettings.perMoveTime);
                   }
@@ -250,7 +236,7 @@ const ChessBoard = ({ mode, theme }) => {
       isAIMoving.current = true;
 
       // Determine move time based on difficulty
-      let moveTime = 1000; // Normal
+      let moveTime = 1000;
       if (difficulty === 'easy') moveTime = 500;
       if (difficulty === 'hard') moveTime = 1500;
 
@@ -264,10 +250,7 @@ const ChessBoard = ({ mode, theme }) => {
 
   const handleTimeUp = () => {
     if (!isPaused && !showGameOverModal) {
-      const currentTurn = game.turn();
-      const winner = currentTurn === 'w' ? 'Đen' : 'Trắng';
-
-      setGameOverMessage(`Hết thời gian! ${winner} thắng!`);
+      setGameOverMessage(`Hết thời gian! Bạn đã thua!`);
       setShowGameOverModal(true);
     }
   };
@@ -278,19 +261,17 @@ const ChessBoard = ({ mode, theme }) => {
     }
   };
 
-  const handlePause = () => {
+  const handlePauseGame = () => {
+    setShowSettings(true);
     setIsPaused(true);
+    setIsResuming(false);
   };
-
-  const handleResume = () => {
+  const handleResumeGame = () => {
+    setShowSettings(false);
+    setIsResuming(true);
     setIsPaused(false);
-  };
-
-  const handleResign = () => {
-    const currentTurn = game.turn();
-    const winner = currentTurn === 'w' ? 'Đen' : 'Trắng';
-    setGameOverMessage(`Bạn đã đầu hàng! ${winner} thắng!`);
-    setShowGameOverModal(true);
+    // Reset the flag after a short delay to ensure it's used in the render cycle
+    setTimeout(() => setIsResuming(false), 100);
   };
 
   const handleNewGame = () => {
@@ -384,65 +365,26 @@ const ChessBoard = ({ mode, theme }) => {
   return (
     <div className="chess-container">
       <GameExitHandler
-        isGameActive={isGameActive} // Pass the active game state
+        isGameActive={isGameActive}
         gameMode="ai"
-        onExitConfirm={handleExitConfirm} // Pass the exit handler
-        gameEnded={showGameOverModal} // Sử dụng showGameOverModal để xác định khi nào game đã kết thúc
+        onExitConfirm={handleExitConfirm}
+        gameEnded={showGameOverModal} 
       />
 
-      <button
-        className="settings-button"
-        onClick={() => {
-          setShowSettings(!showSettings);
-          setIsPaused(!isPaused);
-        }}
-      >
-        {/* ⚙️ */}
-        <img src={settingImages[theme]}></img>
-      </button>
-
-      {isPaused && (
-        <div className="pause-overlay">
-          <div className="pause-content">
-            <h2>Cài đặt</h2>
-            <TimerSettings onSettingsChange={handleTimerSettingsChange} />
-            <button
-              className="control-button resume"
-              onClick={() => {
-                setShowSettings(false);
-                setIsPaused(false);
-              }}
-            >
-              Tiếp tục
-            </button>
-          </div>
+      <div className="game-info position-relative align-items-center text-center py-2 rounded">
+        <div className="fw-bold fs-4">
+          Bạn ({playerColor === 'white' ? 'Trắng ⚪' : 'Đen ⚫'}) vs Máy ({playerColor === 'white' ? 'Đen ⚫' : 'Trắng ⚪'}) <br/>
+          Độ khó: {difficulty}
         </div>
-      )}
-
-      {showGameOverModal && (
-        <div className="game-over-overlay">
-          <div className="game-over-content">
-            <h2>Game Over</h2>
-            <p>{gameOverMessage}</p>
-            <div className="game-over-buttons">
-              <button className="control-button new-game" onClick={restartGame}>
-                Ván mới
-              </button>
-              <button className="control-button exit" onClick={handleExitToHome}>
-                Thoát
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="game-info">
-        {mode === 'ai' && (
-          <div>
-            <div>Bạn ({playerColor === 'white' ? 'Trắng ⚪' : 'Đen ⚫'}) vs Máy (Độ khó: {difficulty})</div>
-          </div>
-        )}
-        <div>Lượt đi: {game.turn() === 'w' ? 'Trắng ⚪' : 'Đen ⚫'}</div>
+        <div>Lượt của: {game.turn() === playerColor ? 'Bạn' : 'Máy'}</div>
+          <PauseHandler 
+            isPaused={isPaused}
+            theme={theme}
+            onPause={handlePauseGame}
+            onResume={handleResumeGame}
+            onExit={handleExitToHome}
+            settingImages={settingImages}
+          />
       </div>
 
       {showGameOverModal && (
@@ -465,36 +407,30 @@ const ChessBoard = ({ mode, theme }) => {
       {timerSettings.isEnabled && (
         <div className="timers">
           <div className="white-timer">
-            <div>Trắng ⚪</div>
+            <div>{playerColor === 'w' ? 'Bạn: ' : 'Máy: ' }Trắng ⚪</div>
             <Timer
               initialTime={timerSettings.timerType === 'total' ? whiteTime : currentMoveTime}
               isActive={!isPaused && !showGameOverModal && game.turn() === 'w'}
               onTimeUp={handleTimeUp}
               timerType={timerSettings.timerType}
               onMoveComplete={handleMoveComplete}
+              isPauseResume={isResuming}
             />
           </div>
           <div className="black-timer">
-            <div>Đen ⚫</div>
+            <div>{playerColor === 'b' ? 'Bạn: ' : 'Máy: '}Đen ⚫</div>
             <Timer
               initialTime={timerSettings.timerType === 'total' ? blackTime : currentMoveTime}
               isActive={!isPaused && !showGameOverModal && game.turn() === 'b'}
               onTimeUp={handleTimeUp}
               timerType={timerSettings.timerType}
               onMoveComplete={handleMoveComplete}
+              isPauseResume={isResuming}
             />
           </div>
         </div>
       )}
-
-      {/* <GameControls
-        isPaused={isPaused}
-        onPause={handlePause}
-        onResume={handleResume}
-        onResign={handleResign}
-        onNewGame={handleNewGame}
-      /> */}
-
+      
       <div className="board-container">
         <div className="board-wrapper">
           <Chessboard
@@ -517,4 +453,4 @@ const ChessBoard = ({ mode, theme }) => {
   );
 };
 
-export default ChessBoard;
+export default AIGame;

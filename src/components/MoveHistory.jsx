@@ -11,16 +11,12 @@ const MoveHistory = ({ moves = [], boardOrientation = 'white' }) => {
     'k': { white: '♔', black: '♚' }
   };
 
-  // Convert file number (0-7) to letter (a-h)
-  const fileToChar = (file) => String.fromCharCode(97 + file);
-  
   // Get square notation (e.g., 'e4') from a square position
   const formatSquare = (square) => {
     if (!square || square.length !== 2) return '';
     return square;
   };
   
-  // Get the piece icon based on piece type and color
   const getPieceIcon = (piece, color) => {
     if (!piece) return '';
     const pieceType = piece.toLowerCase();

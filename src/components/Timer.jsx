@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Timer = ({ initialTime, isActive, onTimeUp, timerType, onMoveComplete }) => {
+const Timer = ({ initialTime, isActive, onTimeUp, timerType, onMoveComplete, isPauseResume = false }) => {
   const [time, setTime] = useState(initialTime);
   const [previousIsActive, setPreviousIsActive] = useState(false);
 
@@ -13,9 +13,7 @@ const Timer = ({ initialTime, isActive, onTimeUp, timerType, onMoveComplete }) =
   useEffect(() => {
     let interval = null;
     
-    // When switching from inactive to active, trigger onMoveComplete
-    if (isActive && !previousIsActive && timerType === 'perMove') {
-      // Only reset on move change for per-move timer type
+    if (isActive && !previousIsActive && timerType === 'perMove' && !isPauseResume) {
       setTime(initialTime);
       if (onMoveComplete) onMoveComplete();
     }
@@ -27,7 +25,8 @@ const Timer = ({ initialTime, isActive, onTimeUp, timerType, onMoveComplete }) =
         setTime((prevTime) => {
           if (prevTime <= 1) {
             clearInterval(interval);
-            if (onTimeUp) setTimeout(onTimeUp, 0); // Call with slight delay to avoid state update issues
+            if (onTimeUp) setTimeout(onTimeUp, 0);
+             // Call with slight delay to avoid state update issues
             return 0;
           }
           return prevTime - 1;
@@ -40,7 +39,7 @@ const Timer = ({ initialTime, isActive, onTimeUp, timerType, onMoveComplete }) =
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, onTimeUp, initialTime, timerType, onMoveComplete, previousIsActive]);
+  }, [isActive, onTimeUp, initialTime, timerType, onMoveComplete, previousIsActive, isPauseResume]);
 
   // Format time for display
   const formatTime = (timeInSeconds) => {
@@ -49,7 +48,6 @@ const Timer = ({ initialTime, isActive, onTimeUp, timerType, onMoveComplete }) =
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
-  // Calculate progress percentage
   const progressPercentage = (time / initialTime) * 100;
   const progressColor = progressPercentage > 50 
     ? '#4CAF50' 

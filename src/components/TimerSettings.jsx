@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 
 const TimerSettings = ({ onSettingsChange }) => {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [timerType, setTimerType] = useState('total'); // 'total' hoặc 'perMove'
-  const [totalTime, setTotalTime] = useState(10); // phút
-  const [perMoveTime, setPerMoveTime] = useState(60); // giây
+  const [timerType, setTimerType] = useState('total');
+  const [totalTime, setTotalTime] = useState(10);
+  const [perMoveTime, setPerMoveTime] = useState(60);
 
-  // Update parent component whenever settings change
   useEffect(() => {
     handleSettingsChange();
   }, [isEnabled, timerType, totalTime, perMoveTime]);

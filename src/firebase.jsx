@@ -9,8 +9,6 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   sendEmailVerification,
-  applyActionCode,
-  verifyPasswordResetCode,
   confirmPasswordReset
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore"; 
@@ -26,14 +24,14 @@ const firebaseConfig = {
   messagingSenderId: "782177440364",
   appId: "1:782177440364:web:2f1b7234223a415eff3e49",
   measurementId: "G-WNXYTC2WPK",
-  databaseURL: "https://chess-e60ba-default-rtdb.firebaseio.com/" // Đảm bảo URL này đúng
+  databaseURL: "https://chess-e60ba-default-rtdb.firebaseio.com/"
 };
 
 // Khởi tạo Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const auth = getAuth(app); // Thêm auth
-const db = getDatabase(app); // Đảm bảo bạn gọi getDatabase(app)
+const auth = getAuth(app);
+const db = getDatabase(app);
 
 // Tạo provider cho Google Authentication
 const google = new GoogleAuthProvider();

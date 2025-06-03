@@ -2,7 +2,7 @@
     position: fixed;
     top: 0;
     right: -300px;
-    width: 300px;
+    width: 250px;
     height: 100%;
     background-color: #fefae0;
     color: #000;
@@ -11,6 +11,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
 }
 
 .sidebar.open {
@@ -74,6 +75,7 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
+    border-radius: 10px;
 }
 
 .theme-button:hover {
@@ -88,6 +90,7 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
+    border-radius: 10px;
 }
 
 .auth-button:hover {

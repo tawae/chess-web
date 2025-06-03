@@ -3,25 +3,25 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { db } from '../firebase';
-import { ref, onValue, set, off, remove, update } from 'firebase/database';
+import { ref, onValue, off, remove, update } from 'firebase/database';
 import { useAuth } from '../hooks/useAuth';
-import TimerSettings from './TimerSettings';
 import Timer from './Timer';
 import MoveHistory from './MoveHistory';
 import GameExitHandler from './GameExitHandler';
 import { safeNavigate } from '../utils/navigation';
+import GameOverModal from './GameOverModal';
 
 const OnlineGameRoom = () => {
   const { roomId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const gameRef = useRef(new Chess());
-  const [fen, setFen] = useState('start');
-  const [roomData, setRoomData] = useState(null);
-  const [selectedSquare, setSelectedSquare] = useState(null);
-  const [playerColor, setPlayerColor] = useState(null);
-  const [opponent, setOpponent] = useState(null);
-  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [fen, setFen] = useState('start');              // Vị trí hiện tại của bàn cờ
+  const [roomData, setRoomData] = useState(null);       // Dữ liệu phòng từ Firebase
+  const [selectedSquare, setSelectedSquare] = useState(null); // Ô được chọn
+  const [playerColor, setPlayerColor] = useState(null); // Màu quân của người chơi
+  const [opponent, setOpponent] = useState(null);       // Thông tin đối thủ
+  const [isMyTurn, setIsMyTurn] = useState(false);      // Có phải lượt của mình không
   const [isPaused, setIsPaused] = useState(false);
   const [timerSettings, setTimerSettings] = useState({
     isEnabled: false,
@@ -285,6 +285,41 @@ const OnlineGameRoom = () => {
     }
   }, [roomId, roomData, playerColor, user]);
 
+  const handleNewGame = () => {
+    safeNavigate('/online');
+  };
+
+  const handleExitToHome = () => {
+    safeNavigate('/online');
+  };
+
+  const isGameOver = gameRef.current?.isGameOver() || !!roomData?.winner || roomData?.status === 'completed';
+  const getGameOverMessage = () => {
+    // Check if this is the local player's win/loss
+    const isLocalPlayerWinner = roomData?.winner === playerColor;
+    
+    if (roomData?.winner) {
+      return isLocalPlayerWinner ? 'Bạn thắng!' : 'Bạn thua!';
+    }
+    
+    if (gameRef.current?.isCheckmate()) {
+      const checkmateWinner = gameRef.current.turn() === 'w' ? 'black' : 'white';
+      return checkmateWinner === playerColor ? 'Bạn thắng do chiếu hết!' : 'Bạn thua do bị chiếu hết!';
+    }
+    
+    if (gameRef.current?.isDraw()) {
+      return 'Hòa!';
+    }
+    
+    return 'Game kết thúc!';
+  };
+
+  const getAdditionalInfo = () => {
+    if (roomData?.reason === 'timeout') return 'Hết giờ';
+    if (roomData?.reason === 'forfeit') return 'Đối thủ đầu hàng';
+    return null;
+  };
+
   if (!user) {
     return <div className="loading-message">Đang xác thực người dùng...</div>;
   }
@@ -320,58 +355,48 @@ const OnlineGameRoom = () => {
       } catch (e) {}
   }
 
+  const getPlayerName = (color) => {
+    const player = Object.values(roomData.players).find(p => p.color === color);
+    return player?.name || '...';
+  };
+
+  const whitePlayerName = getPlayerName('white');
+  const blackPlayerName = getPlayerName('black');
+  const isLocalPlayerWhite = playerColor === 'white';
+  const isLocalPlayerBlack = playerColor === 'black';
+
   return (
     <div className="chess-container online-game">
       <GameExitHandler 
         isGameActive={isGameActive}
-        message="Bạn sẽ bị xử thua nếu rời khỏi ván đấu. Rời đi?"
+        message="Bạn sẽ bị xử thua nếu rời khỏi ván đấu."
         onExitConfirm={() => console.log("Người chơi xác nhận thoát")}
         notifyOpponent={notifyOpponentForfeit}
         gameEnded={roomData?.status === 'completed' || gameRef.current?.isGameOver() || !!roomData?.winner}
       />
-      
-      {/* {showGameOverModal && (
-        <div className="game-over-overlay">
-          <div className="game-over-content">
-            <h2>Game Over</h2>
-            <p>{gameOverMessage}</p>
-            <div className="game-over-buttons">
-              <button className="control-button new-game" onClick={restartGame}>
-                Ván mới
-              </button>
-              <button className="control-button exit" onClick={handleExitToHome}>
-                Thoát
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-       */}
+
       <div className="game-info">
         <div className="room-code">Phòng: {roomId}</div>
         <div className="players-info">
           <div>⚪ Trắng: {Object.values(roomData.players).find(p => p.color === 'white')?.name || '...'}</div>
+          <div>vs</div>
           <div>⚫ Đen: {Object.values(roomData.players).find(p => p.color === 'black')?.name || '...'}</div>
         </div>
-        <div className="turn-indicator">Lượt đi: {gameRef.current.turn() === 'w' ? 'Trắng' : 'Đen'} </div>
-        {gameRef.current.isGameOver() && (
-          <div className="game-status">
-            {gameRef.current.isCheckmate() ?
-              `Chiếu hết! ${gameRef.current.turn() === 'w' ? 'Đen' : 'Trắng'} thắng!` :
-              gameRef.current.isDraw() ? 'Hòa!' : 'Game kết thúc!'}
-          </div>
-        )}
-        {roomData.winner && (
-          <div className="game-status">
-            {`${roomData.winner === 'white' ? 'Trắng' : 'Đen'} thắng! ${roomData.reason === 'timeout' ? '(Do timeout)' : ''}`}
-          </div>
-        )}
+        <div className="turn-indicator">
+          Lượt của: {
+            gameRef.current.turn() === 'w' ? 
+              (isLocalPlayerWhite ? 'Bạn (Trắng)' : `${whitePlayerName} (Trắng)`) : 
+              (isLocalPlayerBlack ? 'Bạn (Đen)' : `${blackPlayerName} (Đen)`)
+          }
+        </div>
       </div>
 
       {timerSettings.isEnabled && (
         <div className="timers">
           <div className="white-timer">
-            <div>Trắng ⚪</div>
+            <div className="player-name">
+              {isLocalPlayerWhite ? 'Bạn: ' : whitePlayerName + ': '} Trắng ⚪
+            </div>
             <Timer
               initialTime={timerSettings.timerType === 'total' ? roomData.whiteTime || whiteTime : roomData.currentMoveTime || currentMoveTime}
               isActive={!isPaused && !gameRef.current.isGameOver() && gameRef.current.turn() === 'w' && roomData.status === 'playing'}
@@ -381,7 +406,9 @@ const OnlineGameRoom = () => {
             />
           </div>
           <div className="black-timer">
-            <div>Đen ⚫</div>
+            <div className="player-name">
+              {isLocalPlayerBlack ? 'Bạn: ' : blackPlayerName + ': '} Đen ⚫
+            </div>
             <Timer
               initialTime={timerSettings.timerType === 'total' ? roomData.blackTime || blackTime : roomData.currentMoveTime || currentMoveTime}
               isActive={!isPaused && !gameRef.current.isGameOver() && gameRef.current.turn() === 'b' && roomData.status === 'playing'}
@@ -411,6 +438,14 @@ const OnlineGameRoom = () => {
           boardOrientation={playerColor}
         />
       </div>
+
+      <GameOverModal
+        show={isGameOver}
+        message={getGameOverMessage()}
+        additionalInfo={getAdditionalInfo()}
+        onNewGame={handleNewGame}
+        onExit={handleExitToHome}
+      />
     </div>
   );
 };

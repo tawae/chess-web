@@ -22,10 +22,8 @@ const OnlineGameMenu = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Debugging only - remove in production
     console.log('Using database with proper methods:', db);
-    
-    // Example of proper database usage:
+
     const gamesRef = ref(db, 'games');
     
     const unsubscribe = onValue(gamesRef, (snapshot) => {
@@ -103,7 +101,7 @@ const OnlineGameMenu = () => {
       <div className="create-room">
         <h3>Tạo phòng mới</h3>
         <div className="color-selection">
-          <label>Chọn màu quân:</label>
+          <h4>Chọn màu quân:</h4>
           <div className="color-buttons">
             <button 
               className={selectedColor === 'white' ? 'selected' : ''}
@@ -121,7 +119,7 @@ const OnlineGameMenu = () => {
         </div>
 
         <div className="timer-settings-section">
-          <h3>Cài đặt đồng hồ</h3>
+          <h4>Cài đặt đồng hồ</h4>
           <TimerSettings onSettingsChange={setTimerSettings} />
         </div>
 

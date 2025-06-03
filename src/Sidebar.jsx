@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import './Sidebar.css';
 import { auth } from "./firebase";
@@ -24,7 +24,7 @@ const Sidebar = ({ theme, toggleTheme, isSidebarOpen, setIsSidebarOpen }) => {
             <div className="sidebar-footer">
                 {user ? (
                     <div className="user-info">
-                        <span>{user.displayName || user.email}</span>
+                        <span>{ user.displayName || user.email}</span>
                         <button
                             className="auth-button"
                             onClick={() => {

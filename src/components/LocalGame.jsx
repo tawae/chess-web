@@ -1,20 +1,23 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
-import TimerSettings from './TimerSettings';
 import Timer from './Timer';
 import MoveHistory from './MoveHistory';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import GameExitHandler from './GameExitHandler';
 import { safeNavigate } from '../utils/navigation';
+import PauseHandler from './PauseHandler';
+import GameOverModal from './GameOverModal';
+
 
 const settingImages = {
-  light: 'src/assets/icons8-setting-50.png',
-  dark: 'src/assets/icons8-white-setting-50.png'
+  light: 'src/assets/pause-dark.png',
+  dark: 'src/assets/pause-light.png'
 }
 
-const LocalGame = ({ theme }) => {
+const LocalGame = ({ mode, theme }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [game, setGame] = useState(new Chess());
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [moveHistory, setMoveHistory] = useState([]);
@@ -26,42 +29,47 @@ const LocalGame = ({ theme }) => {
     totalTime: 10,
     perMoveTime: 60
   });
+  const gameSettings = mode === 'local' ? location?.state : {};
   const [whiteTime, setWhiteTime] = useState(timerSettings.totalTime * 60);
   const [blackTime, setBlackTime] = useState(timerSettings.totalTime * 60);
   const [currentMoveTime, setCurrentMoveTime] = useState(timerSettings.perMoveTime);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [gameOverMessage, setGameOverMessage] = useState('');
+  const [isResuming, setIsResuming] = useState(false);
 
   // Determine if the game is active (for exit confirmation)
   const isGameActive = !showGameOverModal && game && !game.isGameOver();
 
   // Handle exit confirmation
   const handleExitConfirm = useCallback(() => {
-    // In local game, we just need to mark the game as over
     setShowGameOverModal(true);
     setGameOverMessage('Bạn đã thoát khỏi trò chơi. Trò chơi kết thúc!');
     setIsPaused(true);
   }, []);
 
-  // Handle timer settings changes
-  const handleTimerSettingsChange = (newSettings) => {
-    setTimerSettings(newSettings);
-    if (newSettings.isEnabled) {
-      if (newSettings.timerType === 'total') {
-        setWhiteTime(parseFloat(newSettings.totalTime) * 60);
-        setBlackTime(parseFloat(newSettings.totalTime) * 60);
-      } else {
-        setCurrentMoveTime(parseFloat(newSettings.perMoveTime));
+  // Initialize timer settings from location state
+  useEffect(() => {
+    if (mode === 'local' && location?.state?.timerSettings) {
+      const settings = location.state.timerSettings;
+      setTimerSettings(settings);
+
+      if (settings.isEnabled) {
+        if (settings.timerType === 'total') {
+          // Convert minutes to seconds for the timer
+          setWhiteTime(parseFloat(settings.totalTime) * 60);
+          setBlackTime(parseFloat(settings.totalTime) * 60);
+        } else {
+          setCurrentMoveTime(parseFloat(settings.perMoveTime));
+        }
       }
     }
-  };
+  }, [mode, location?.state]);
 
   const restartGame = () => {
     setGame(new Chess());
     setSelectedSquare(null);
     setMoveHistory([]);
     setShowGameOverModal(false);
-    // Reset timers if they're enabled
     if (timerSettings.isEnabled) {
       setWhiteTime(timerSettings.totalTime * 60);
       setBlackTime(timerSettings.totalTime * 60);
@@ -91,7 +99,7 @@ const LocalGame = ({ theme }) => {
         const move = gameCopy.move({
           from: selectedSquare,
           to: square,
-          promotion: 'q'
+          promotion: 'q',
         });
 
         if (move) {
@@ -125,12 +133,9 @@ const LocalGame = ({ theme }) => {
       const currentTurn = game.turn();
       const winner = currentTurn === 'w' ? 'Đen' : 'Trắng';
 
-      // Mark the game as over without trying to set an invalid FEN
       const gameCopy = new Chess(game.fen());
-      // Instead of trying to load an invalid FEN, we'll just set a flag
       setGame(gameCopy);
 
-      // Show game over modal
       setGameOverMessage(`Hết thời gian! ${winner} thắng!`);
       setShowGameOverModal(true);
     }
@@ -143,12 +148,9 @@ const LocalGame = ({ theme }) => {
   };
 
   const handleExitToHome = () => {
-    // Since the game is already over when this function is called,
-    // we can navigate directly without confirmation
     safeNavigate('/');
   };
 
-  // Tạo custom styles cho các ô được chọn
   const customSquareStyles = {};
   if (selectedSquare) {
     customSquareStyles[selectedSquare] = { backgroundColor: "rgba(255, 255, 0, 0.4)" };
@@ -158,63 +160,47 @@ const LocalGame = ({ theme }) => {
     });
   }
 
+  const handleResumeGame = () => {
+    setShowSettings(false);
+    setIsResuming(true);
+    setIsPaused(false);
+    // Reset the flag after a short delay to ensure it's used in the render cycle
+    setTimeout(() => setIsResuming(false), 100);
+  };
+
+  const handlePauseGame = () => {
+    setShowSettings(true);
+    setIsPaused(true);
+    setIsResuming(false);
+  };
+
   return (
     <div className="chess-container">
-      {/* Add the GameExitHandler component */}
       <GameExitHandler
         isGameActive={isGameActive}
         gameMode="local"
         onExitConfirm={handleExitConfirm}
       />
 
-      <button
-        className="settings-button"
-        onClick={() => {
-          setShowSettings(!showSettings);
-          setIsPaused(!isPaused);
-        }}
-      >
-        {/* ⚙️ */}
-        <img src={settingImages[theme]}></img>
-      </button>
+      <GameOverModal 
+        show={showGameOverModal}
+        message={gameOverMessage}
+        onNewGame={restartGame}
+        onExit={handleExitToHome}
+      />
 
-      {isPaused && (
-        <div className="pause-overlay">
-          <div className="pause-content">
-            <h2>Cài đặt</h2>
-            <TimerSettings onSettingsChange={handleTimerSettingsChange} />
-            <button
-              className="control-button resume"
-              onClick={() => {
-                setShowSettings(false);
-                setIsPaused(false);
-              }}
-            >
-              Tiếp tục
-            </button>
-          </div>
+      <div className="game-info position-relative align-items-center text-center py-2 rounded">
+        <div className="fw-bold fs-4">
+          Lượt đi: {game.turn() === 'w' ? 'Trắng' : 'Đen'}
         </div>
-      )}
-
-      {showGameOverModal && (
-        <div className="game-over-overlay">
-          <div className="game-over-content">
-            <h2>Game Over</h2>
-            <p>{gameOverMessage}</p>
-            <div className="game-over-buttons">
-              <button className="control-button new-game" onClick={restartGame}>
-                Ván mới
-              </button>
-              <button className="control-button exit" onClick={handleExitToHome}>
-                Thoát
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="game-info">
-        <div>Lượt đi: {game.turn() === 'w' ? 'Trắng' : 'Đen'}</div>
+          <PauseHandler 
+            isPaused={isPaused}
+            theme={theme}
+            onPause={handlePauseGame}
+            onResume={handleResumeGame}
+            onExit={handleExitToHome}
+            settingImages={settingImages}
+          />
       </div>
 
       {timerSettings.isEnabled && (
@@ -227,6 +213,7 @@ const LocalGame = ({ theme }) => {
               onTimeUp={handleTimeUp}
               timerType={timerSettings.timerType}
               onMoveComplete={handleMoveComplete}
+              isPauseResume={isResuming}
             />
           </div>
           <div className="black-timer">
@@ -237,6 +224,7 @@ const LocalGame = ({ theme }) => {
               onTimeUp={handleTimeUp}
               timerType={timerSettings.timerType}
               onMoveComplete={handleMoveComplete}
+              isPauseResume={isResuming}
             />
           </div>
         </div>

@@ -69,8 +69,8 @@ function ForgotPassword() {
       </div>}
       
       <form onSubmit={handleResetPassword}>
-        <div className="form-group">
-          <label>Email</label>
+        <div className="form-group align-items-center justify-content-center">
+          <label>Email:</label>
           <input 
             type="email" 
             value={email}

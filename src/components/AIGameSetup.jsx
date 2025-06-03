@@ -29,7 +29,7 @@ const AIGameSetup = () => {
       <h2>Thiết lập trận đấu với AI</h2>
 
       <div className="color-selection">
-        <h3>Chọn quân cờ</h3>
+        <h4>Chọn quân cờ</h4>
         <div className="color-buttons">
           <button
             className={playerColor === 'white' ? 'selected' : ''}
@@ -47,7 +47,7 @@ const AIGameSetup = () => {
       </div>
 
       <div className="difficulty-selection">
-        <h3 class="setup-title">Chọn độ khó</h3>
+        <h4 class="setup-title">Chọn độ khó</h4>
         <div className="difficulty-buttons">
           <button
             className={difficulty === 'easy' ? 'selected' : ''}
@@ -71,7 +71,7 @@ const AIGameSetup = () => {
       </div>
 
       <div className="timer-settings-section">
-        <h3 class="setup-title">Cài đặt đồng hồ</h3>
+        <h4 class="setup-title">Cài đặt đồng hồ</h4>
         <TimerSettings onSettingsChange={setTimerSettings} />
       </div>
 
